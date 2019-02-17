@@ -1,0 +1,14 @@
+{
+  "name": "block-revisions",
+  "version": "1.0.0",
+  "description": "Block revisions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "adamsilverstein",
+  "license": "MIT",
+  "dependencies": {
+    "webpack": "^4.29.4"
+  }
+}
