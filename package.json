@@ -4,11 +4,19 @@
   "description": "Block revisions",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack -p --mode=production",
+    "watch": "webpack --watch --mode=development --debug --devtool cheap-module-eval-source-map --output-pathinfo"
   },
   "author": "adamsilverstein",
   "license": "MIT",
   "dependencies": {
     "webpack": "^4.29.4"
+  },
+  "browserslist": [
+    "extends @wordpress/browserslist-config"
+  ],
+  "devDependencies": {
+    "@babel/preset-env": "^7.3.1",
+    "webpack-cli": "^3.2.3"
   }
 }

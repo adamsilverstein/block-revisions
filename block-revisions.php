@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Block Revisions.
+ * Plugin Name: Block Revisions
  * Description: Block based revisions.
  * Version:     1.0.0
  * Author:      adamsilverstein
