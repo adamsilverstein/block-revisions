@@ -33,12 +33,13 @@ class BlockRevisions extends Component {
 		const postID = getCurrentPostId();
 		apiFetch.use( apiFetch.createRootURLMiddleware( root ) );
 		apiFetch.use( apiFetch.createNonceMiddleware( nonce ) );
-		const fetchPath = `/wp/v2/posts/${ postID }/revisions`;
+
+		// @todo _embed doesn't resolve the author name, lets add that manually in a rest filter to avoid an additional request.
+		const fetchPath = `/wp/v2/posts/${ postID }/revisions?context=edit&_embed`;
 		console.log( 'getRevisions', fetchPath );
 		return apiFetch(
 			{
 				path: fetchPath,
-				method: 'GET',
 			}
 		).then( ( revisions ) => {
 			this.setState( {
@@ -73,7 +74,19 @@ class BlockRevisions extends Component {
 		}
 		return (
 			<Fragment>
-				<h3>Revisions</h3>
+				{
+					revisions.map( ( revision, i ) => {
+						const date = new Date( revision.date );
+						return (
+							<button
+								className="block-revision"
+								key={ i }
+							>
+								{ `Revision created: ${ date.toLocaleDateString() } at ${ date.toLocaleTimeString() }` }
+							</button>
+						);
+					} )
+				}
 			</Fragment>
 		);
 	}
