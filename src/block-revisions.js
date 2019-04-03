@@ -1,5 +1,6 @@
 import apiFetch from '@wordpress/api-fetch';
 import dateFormat from 'dateformat';
+import './main.css';
 
 const {
 	Component,
@@ -15,11 +16,20 @@ class BlockRevisions extends Component {
 		this.state = {
 			revisions: false, // false until loaded.
 			error: false,
+			activeRevisionIndex: 0,
 		};
+
+		this.handleRevisionClick = this.handleRevisionClick.bind( this );
 	}
 
 	componentDidMount() {
 		this.getRevisions();
+	}
+
+	handleRevisionClick( i ) {
+		this.setState( {
+			activeRevisionIndex: i,
+		} );
 	}
 
 	/**
@@ -58,6 +68,7 @@ class BlockRevisions extends Component {
 		const {
 			revisions,
 			error,
+			activeRevisionIndex,
 		} = this.state;
 
 		if ( error ) {
@@ -77,18 +88,23 @@ class BlockRevisions extends Component {
 			<Fragment>
 				{
 					revisions.map( ( revision, i ) => {
-						const date = new Date( revision.date );
-						console.log( revision.date, dateFormat( date, 'mmm dS, h:MM TT' ) );
+						const {
+							date,
+							authorname,
+						} = revision;
 						return (
 							<div
-								className="block-revisions-revision"
+								className={ `block-revisions-revision${ activeRevisionIndex === i ? ' active' : '' }` }
 								key={ i }
+								onClick={ () => {
+									this.handleRevisionClick( i );
+								} }
 							>
 								<p className="block-revision-date">
-								{ dateFormat( revision.date, 'mmm dS, h:MM TT' ) }
+								{ dateFormat( date, 'mmm dS, h:MM TT' ) }
 								</p>
 								<p className="block-revision-author">
-
+									{ authorname }
 								</p>
 							</div>
 						);
