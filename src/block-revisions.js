@@ -132,6 +132,7 @@ class BlockRevisions extends Component {
 						<ReactDiffViewer
 							oldValue={ oldContent }
 							newValue={ newContent }
+							splitView={ false }
 						/>
 					</div>
 				</div>
