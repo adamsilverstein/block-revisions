@@ -34,3 +34,15 @@ function admin_enqueue_scripts() {
 		true
 	);
 }
+
+/**
+ * Return the author information with revisions.
+ */
+add_filter( 'rest_prepare_revision',  __NAMESPACE__ . '\rest_prepare_revision' );
+
+function rest_prepare_revision( $response ) {
+	$author_id = $response->data['author'];
+	$user = get_user_by( 'id', $author_id );
+	$response->data['authorname'] = $user->data->display_name;
+	return $response;
+}
