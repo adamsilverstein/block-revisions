@@ -1,0 +1,28 @@
+.block-revisions-revision {
+	border-top: 1px solid silver;
+	padding-left: 25px;
+	padding-top: 12px;
+	padding-bottom: 12px;
+
+}
+.block-revisions-revision.active,
+.block-revisions-revision.active:hover {
+	background-color: rgb( 232, 240, 254 );
+}
+.block-revisions-revision p {
+	margin-bottom: 6px;
+}
+
+.block-revisions-revision:hover {
+	background-color: #eee;
+}
+
+.block-revision-date {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.block-revision-author {
+	font-size: 12px;
+	font-style: italic;
+}
