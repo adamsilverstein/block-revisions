@@ -26,3 +26,16 @@
 	font-size: 12px;
 	font-style: italic;
 }
+
+.block-revisions-diff-viewer {
+	position: fixed;
+	width: calc(100% - 440px);
+	height: 100%;
+	top: 100px;
+	left: 160px;
+	right: 260px;
+	bottom: 0;
+	background-color: #FFF;
+	z-index: 2;
+	cursor: pointer;
+}

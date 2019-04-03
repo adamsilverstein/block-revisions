@@ -1,5 +1,8 @@
 import apiFetch from '@wordpress/api-fetch';
 import dateFormat from 'dateformat';
+import React from 'react';
+import ReactDiffViewer from 'react-diff-viewer';
+
 import './main.css';
 
 const {
@@ -17,6 +20,8 @@ class BlockRevisions extends Component {
 			revisions: false, // false until loaded.
 			error: false,
 			activeRevisionIndex: 0,
+			oldContent: '',
+			newContent: '',
 		};
 
 		this.handleRevisionClick = this.handleRevisionClick.bind( this );
@@ -27,9 +32,15 @@ class BlockRevisions extends Component {
 	}
 
 	handleRevisionClick( i ) {
+		const { revisions } = this.state;
+		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
+		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
+
 		this.setState( {
 			activeRevisionIndex: i,
-		} );
+			oldContent,
+			newContent,
+	} );
 	}
 
 	/**
@@ -47,14 +58,18 @@ class BlockRevisions extends Component {
 
 		// @todo _embed doesn't resolve the author name, lets add that manually in a rest filter to avoid an additional request.
 		const fetchPath = `/wp/v2/posts/${ postID }/revisions?context=edit&_embed`;
-		console.log( 'getRevisions', fetchPath );
+
 		return apiFetch(
 			{
 				path: fetchPath,
 			}
 		).then( ( revisions ) => {
+			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
+			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
 			this.setState( {
-				revisions
+				revisions,
+				oldContent,
+				newContent,
 			} );
 		} ).catch( ( error ) => {
 				this.setState( {
@@ -69,10 +84,12 @@ class BlockRevisions extends Component {
 			revisions,
 			error,
 			activeRevisionIndex,
+			oldContent,
+			newContent,
 		} = this.state;
 
 		if ( error ) {
-			return 'Error!';
+			return `Error! ${ error }`;
 		}
 
 		if ( false === revisions ) {
@@ -110,6 +127,15 @@ class BlockRevisions extends Component {
 						);
 					} )
 				}
+				<div className="block-revisions-diff-viewer">
+					<div className="block-revisions-diff-viewer-inner">
+						<ReactDiffViewer
+							oldValue={ oldContent }
+							newValue={ newContent }
+						/>
+					</div>
+				</div>
+
 			</Fragment>
 		);
 	}
