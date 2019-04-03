@@ -1,4 +1,5 @@
 import apiFetch from '@wordpress/api-fetch';
+import dateFormat from 'dateformat';
 
 const {
 	Component,
@@ -77,13 +78,19 @@ class BlockRevisions extends Component {
 				{
 					revisions.map( ( revision, i ) => {
 						const date = new Date( revision.date );
+						console.log( revision.date, dateFormat( date, 'mmm dS, h:MM TT' ) );
 						return (
-							<button
-								className="block-revision"
+							<div
+								className="block-revisions-revision"
 								key={ i }
 							>
-								{ `Revision created: ${ date.toLocaleDateString() } at ${ date.toLocaleTimeString() }` }
-							</button>
+								<p className="block-revision-date">
+								{ dateFormat( revision.date, 'mmm dS, h:MM TT' ) }
+								</p>
+								<p className="block-revision-author">
+
+								</p>
+							</div>
 						);
 					} )
 				}
