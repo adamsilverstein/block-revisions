@@ -88,7 +88,6 @@ class BlockRevisions extends Component {
 
 		this.setState( {
 			activeRevisionIndex: i,
-			diff,
 		} );
 	}
 
@@ -118,7 +117,6 @@ class BlockRevisions extends Component {
 		apiFetch.use( apiFetch.createRootURLMiddleware( root ) );
 		apiFetch.use( apiFetch.createNonceMiddleware( nonce ) );
 
-		// @todo _embed doesn't resolve the author name, lets add that manually in a rest filter to avoid an additional request.
 		const fetchPath = `/wp/v2/posts/${ postID }/revisions?context=edit&_embed`;
 
 		return apiFetch(
@@ -129,9 +127,9 @@ class BlockRevisions extends Component {
 			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
 			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
 			const diff = this.getDiff( oldContent, newContent );
+			wp.data.dispatch( 'core/editor' ).resetBlocks( diff );
 			this.setState( {
 				revisions,
-				diff,
 			} );
 		} ).catch( ( error ) => {
 				this.setState( {
