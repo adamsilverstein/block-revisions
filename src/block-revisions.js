@@ -1,14 +1,18 @@
 import apiFetch from '@wordpress/api-fetch';
 import dateFormat from 'dateformat';
-import React from 'react';
-import ReactDiffViewer from 'react-diff-viewer';
-
+import hash from 'object-hash';
+import LineDiff from 'line-diff';
 import './main.css';
 
 const {
 	Component,
 	Fragment,
 } = wp.element;
+
+const {
+	addFilter,
+	removeFilter,
+} = wp.hooks;
 
 
 class BlockRevisions extends Component {
@@ -20,8 +24,7 @@ class BlockRevisions extends Component {
 			revisions: false, // false until loaded.
 			error: false,
 			activeRevisionIndex: 0,
-			oldContent: '',
-			newContent: '',
+			diff: {},
 		};
 
 		this.handleRevisionClick = this.handleRevisionClick.bind( this );
@@ -29,18 +32,77 @@ class BlockRevisions extends Component {
 
 	componentDidMount() {
 		this.getRevisions();
+		this.setupBlockFilters();
+		this.storePost();
+	}
+
+	componentWillUnmount() {
+		this.removeBlockFilters();
+		this.restorePost();
+	}
+
+	storePost() {
+		this.postBlocks = wp.data.select( 'core/editor' ).getBlocks();
+	}
+
+	restorePost() {
+		wp.data.dispatch( 'core/editor' ).resetBlocks( this.postBlocks );
+	}
+
+
+	/**
+	 * Set up block filters.
+	 */
+	setupBlockFilters() {
+		/**
+		 * Filter the InspectorControls for a single block type.
+		 */
+		const filterBlocks =  ( BlockEdit ) => {
+			return ( props ) => {
+				const { status } = props.attributes;
+				const classToAdd = status ? ` status-${ status }` : '';
+				return (
+					<div className={ `block-revisions-viewer${ classToAdd }` }>
+						<BlockEdit { ...props } />
+					</div>
+				);
+			};
+		};
+		console.log( 'setupBlockFilters' );
+		addFilter( 'editor.BlockEdit', 'block-revisions/block-filter', filterBlocks );
+	}
+
+	/**
+	 * Remove block filters.
+	 */
+	removeBlockFilters() {
+		removeFilter( 'editor.BlockEdit', 'block-revisions/block-filter' );
 	}
 
 	handleRevisionClick( i ) {
 		const { revisions } = this.state;
 		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
 		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
+		const diff = this.getDiff( oldContent, newContent );
+		wp.data.dispatch( 'core/editor' ).resetBlocks( diff );
 
 		this.setState( {
 			activeRevisionIndex: i,
-			oldContent,
-			newContent,
-	} );
+			diff,
+		} );
+	}
+
+	/**
+	 * Generate a hashmap from an array of blocks.
+	 *
+	 * @param {array} blocks An array of blocks.
+	 *
+	 * @return array An array of block hashes.
+	 */
+	getHashMapFromBlocks( blocks ) {
+		return blocks.map( ( block ) => {
+			return hash( block.attributes );
+		} );
 	}
 
 	/**
@@ -66,10 +128,10 @@ class BlockRevisions extends Component {
 		).then( ( revisions ) => {
 			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
 			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
+			const diff = this.getDiff( oldContent, newContent );
 			this.setState( {
 				revisions,
-				oldContent,
-				newContent,
+				diff,
 			} );
 		} ).catch( ( error ) => {
 				this.setState( {
@@ -79,13 +141,50 @@ class BlockRevisions extends Component {
 
 	}
 
+	/**
+	 * Compare two arrays of blocks, returning a diff object.
+	 *
+	 * @param {string} oldContent The old content.
+	 * @param {string} newContent The new content.
+	 *
+	 * @return {LineDiff} The diff object.
+	 */
+	getDiff( oldContent, newContent){
+		const oldBlocks = wp.blocks.parse( oldContent );
+		const newBlocks = wp.blocks.parse( newContent );
+		const oldParsedContent = this.getHashMapFromBlocks( oldBlocks );
+		const newParsedContent = this.getHashMapFromBlocks( newBlocks );
+		const lineDiff = new LineDiff( oldParsedContent, newParsedContent, 0 );
+		const changes  = lineDiff.changes ? lineDiff.changes : [];
+		const newLines = lineDiff.new_lines ? lineDiff.new_lines : [];
+		const oldLines = lineDiff.old_lines ? lineDiff.old_lines : [];
+
+		// Collect the changes.
+
+		// Create the new block map by matching/marking old and new.
+		const markedContent = [];
+		newBlocks.forEach( ( block ) => {
+			const blockHash = hash( block.attributes );
+			if( changes.includes( blockHash ) ) {
+				block.attributes.status = 'changed';
+			}
+			if( newLines.includes( blockHash ) ) {
+				block.attributes.status = 'new';
+			}
+			if( oldLines.includes( blockHash ) ) {
+				block.attributes.status = 'old';
+			}
+			markedContent.push( block );
+		} );
+		return markedContent;
+	}
+
 	render() {
 		const {
 			revisions,
 			error,
 			activeRevisionIndex,
-			oldContent,
-			newContent,
+			diff,
 		} = this.state;
 
 		if ( error ) {
@@ -127,19 +226,15 @@ class BlockRevisions extends Component {
 						);
 					} )
 				}
-				<div className="block-revisions-diff-viewer">
-					<div className="block-revisions-diff-viewer-inner">
-						<ReactDiffViewer
-							oldValue={ oldContent }
-							newValue={ newContent }
-							splitView={ false }
-						/>
-					</div>
-				</div>
+
 
 			</Fragment>
 		);
 	}
 }
-
+/*<div className="block-revisions-diff-viewer">
+					<div className="block-revisions-diff-viewer-inner">
+						Coming sooon.
+					</div>
+				</div>*/
 export default BlockRevisions;
