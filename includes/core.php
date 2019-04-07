@@ -25,7 +25,7 @@ function setup() {
 add_action( 'block_revisions_loaded', __NAMESPACE__ . '\setup' );
 
 function admin_enqueue_scripts() {
-	error_log( BLOCK_REVISIONS_URL . 'dist/main.js' );
+
 	wp_enqueue_script(
 		'block-revisions',
 		BLOCK_REVISIONS_URL . 'dist/main.js',

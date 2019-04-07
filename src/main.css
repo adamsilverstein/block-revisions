@@ -40,6 +40,11 @@
 	cursor: pointer;
 }
 
+.block-revisions-viewer {
+	margin: 0;
+	padding: 0;
+}
+
 .block-revisions-viewer.status-new {
 	border: solid 1px limegreen;
 }

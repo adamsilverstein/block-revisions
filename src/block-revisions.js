@@ -157,22 +157,55 @@ class BlockRevisions extends Component {
 		const newLines = lineDiff.new_lines ? lineDiff.new_lines : [];
 		const oldLines = lineDiff.old_lines ? lineDiff.old_lines : [];
 
-		// Collect the changes.
+
+		// Build a changeMap keyed by the after hash.
+		const changeMap  = [];
+		changes.forEach( ( change ) => {
+			const key   = change[ '_' ][1];
+			const value = change[ '_' ][0];
+			changeMap[ key ] = value;
+		} );
+		console.log( 'newBlocks', newBlocks );
+		console.log( 'changeMap', changeMap );
+		console.log( 'oldBlocks.map', oldBlocks.map( block => hash( block.attributes ) ) );
+		console.log( 'newBlocks.map', newBlocks.map( block => hash( block.attributes ) ) );
 
 		// Create the new block map by matching/marking old and new.
 		const markedContent = [];
 		newBlocks.forEach( ( block ) => {
 			const blockHash = hash( block.attributes );
-			if( changes.includes( blockHash ) ) {
-				block.attributes.status = 'changed';
-			}
-			if( newLines.includes( blockHash ) ) {
+
+			if ( newLines.includes( blockHash ) ) {
 				block.attributes.status = 'new';
 			}
-			if( oldLines.includes( blockHash ) ) {
+
+			if ( oldLines.includes( blockHash ) ) {
 				block.attributes.status = 'old';
 			}
-			markedContent.push( block );
+
+			if ( changeMap[ blockHash ] ) {
+				block.attributes.status = 'new';
+
+				// This block was changed, show removed/added blocks.
+				oldBlocks.forEach( ( oldBlock ) => {
+					console.log( hash( oldBlock.attributes ), hash( oldBlock.attributes ) === changeMap[ blockHash ] );
+
+					if ( hash( oldBlock.attributes ) === changeMap[ blockHash ] ) {
+						oldBlock.attributes.status = 'old changed';
+						// If block blocks are text, show a diff.
+
+						// For non text blocks, push the old and new blocks.
+						markedContent.push( oldBlock );
+						markedContent.push( block );
+					}
+				} );
+
+
+			} else {
+
+				console.log( 'block.attributes.status', block.attributes.status );
+				markedContent.push( block );
+			}
 		} );
 		return markedContent;
 	}
