@@ -29,7 +29,7 @@ function admin_enqueue_scripts() {
 	wp_enqueue_script(
 		'block-revisions',
 		BLOCK_REVISIONS_URL . 'dist/main.js',
-		array(),
+		array( 'wp-sanitize' ),
 		BLOCK_REVISIONS_VERSION,
 		true
 	);

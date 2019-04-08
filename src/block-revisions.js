@@ -16,6 +16,10 @@ const {
 	removeFilter,
 } = wp.hooks;
 
+const {
+	stripTags
+} = wp.sanitize;
+
 
 class BlockRevisions extends Component {
 
@@ -88,6 +92,7 @@ class BlockRevisions extends Component {
 		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
 		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
 		const diff = this.getDiff( oldContent, newContent );
+
 		wp.data.dispatch( 'core/editor' ).resetBlocks( diff );
 
 		this.setState( {
@@ -151,7 +156,7 @@ class BlockRevisions extends Component {
 	 *
 	 * @return {LineDiff} The diff object.
 	 */
-	getDiff( oldContent, newContent){
+	getDiff( oldContent, newContent ){
 		const oldBlocks = wp.blocks.parse( oldContent );
 		const newBlocks = wp.blocks.parse( newContent );
 		const allBlocks = [];
@@ -164,8 +169,6 @@ class BlockRevisions extends Component {
 		const newLines = lineDiff.new_lines ? lineDiff.new_lines : [];
 		const oldLines = lineDiff.old_lines ? lineDiff.old_lines : [];
 
-		console.log( allBlocks, allBlocks.forEach( block => console.log( hash( block.attributes ) ) ) );
-
 		// Build a changeMap keyed by the after hash.
 		const changeMap  = [];
 		changes.forEach( ( change ) => {
@@ -176,29 +179,21 @@ class BlockRevisions extends Component {
 				changeMap[ key ] = value;
 			}
 		} );
-		/*
-		console.log( 'newBlocks', newBlocks );
-		console.log( 'changeMap', changeMap );
-		console.log( 'oldBlocks.map', oldBlocks.map( block => hash( block.attributes ) ) );
-		console.log( 'newBlocks.map', newBlocks.map( block => hash( block.attributes ) ) );
-*/
 
 		// Create the new block map by matching/marking old and new.
-		const markedContent = [];
+		let markedContent = [];
 		newBlocks.forEach( ( block ) => {
 			const blockHash = hash( block.attributes );
 
 
 			if ( changeMap[ blockHash ] ) {
-				block.attributes.status = 'new';
 
 				const newBlock = this.findBlockByHash( blockHash, allBlocks );
 				const oldBlock = this.findBlockByHash( changeMap[ blockHash ], allBlocks );
+				block.attributes.status = 'new';
 
 				// This block was changed, show removed/added blocks.
 				if ( oldBlock ) {
-
-
 
 					// If block blocks are text, show a diff.
 					if (
@@ -206,25 +201,26 @@ class BlockRevisions extends Component {
 						newBlock &&'core/paragraph' === oldBlock.name &&
 						'core/paragraph' === newBlock.name
 					) {
-						console.log( 'inner diff', oldBlock.originalContent, newBlock.originalContent );
-						const diff = jsdiff.diffChars( oldBlock.originalContent, newBlock.originalContent );
+						const diff = jsdiff.diffChars( stripTags( oldBlock.originalContent ).trim(), stripTags( newBlock.originalContent ).trim() );
 						let diffContent = '';
 						// Build the visual diff.
 						diff.forEach( ( part ) => {
-							console.log( part );
 							const color = part.added ? 'added' : part.removed ? 'removed' : 'unchanged';
-							diffContent += `<span class="diff-${ color }">` + part.value + '</span>';
+							diffContent += `<div class="block-inner-diff diff-${ color }">` + part.value + '</div>';
 						  });
-						diffContent = `<span>${ diffContent }</span>`
-						console.log( diffContent );
-						block.originalContent = diffContent;
+						diffContent = `<div>${ diffContent }</div>`
+						block.content = diffContent;
 						block.attributes.content = diffContent;
 						block.attributes.status = 'changed';
 						markedContent.push( block );
 					} else {
+						if ( oldBlock && newBlock ) {
+							oldBlock.attributes.status = 'unchanged';
+						} else {
+							oldBlock.attributes.status = 'old changed';
+							block.attributes.status = 'new changed';
 
-						oldBlock.attributes.status = 'old changed';
-						block.attributes.status = 'new changed';
+						}
 
 						// For non text blocks, push the old and new blocks.
 						markedContent.push( oldBlock );
@@ -237,10 +233,10 @@ class BlockRevisions extends Component {
 
 				if ( newLines.includes( blockHash ) ) {
 					block.attributes.status = 'new';
-				}
-
-				if ( oldLines.includes( blockHash ) ) {
+				} else if ( oldLines.includes( blockHash ) ) {
 					block.attributes.status = 'old';
+				} else {
+					block.attributes.status = 'unchanged';
 				}
 
 				markedContent.push( block );
@@ -258,7 +254,6 @@ class BlockRevisions extends Component {
 	findBlockByHash( blockHash, blocks ) {
 		let found = false
 		blocks.forEach( ( block ) => {
-			console.log( hash( block.attributes ), blockHash, hash( block.attributes ) === blockHash );
 			if ( hash( block.attributes ) === blockHash ) {
 				found = block;
 			}

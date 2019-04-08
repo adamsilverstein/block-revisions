@@ -81,13 +81,17 @@
 }
 
 .diff-unchanged {
-	background-color: #EEE;
+	background-color: ivory;
 }
 
 .diff-added {
-	background-color: azure;
+	background-color: palegreen;
 }
 .diff-removed {
 	background-color: #FFCCCC;
 	text-decoration: line-through;
+}
+
+.block-inner-diff {
+	display:inline-block;
 }
