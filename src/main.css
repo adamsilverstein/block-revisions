@@ -79,3 +79,15 @@
 .block-revisions-viewer.status-changed {
 	border: solid 1px lightskyblue;
 }
+
+.diff-unchanged {
+	background-color: #EEE;
+}
+
+.diff-added {
+	background-color: azure;
+}
+.diff-removed {
+	background-color: #FFCCCC;
+	text-decoration: line-through;
+}
