@@ -1,0 +1,23 @@
+{
+	"name": "adamsilverstein/block-revisions",
+	"description": "Block based revisions.",
+	"type": "plugin",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Adam Silverstein",
+			"email": "adam@earthbound.com"
+		}
+	],
+	"require": {},
+	"scripts": {
+		"install-codestandards": [
+			"Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
+		]
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^0.5.0",
+		"phpcompatibility/php-compatibility": "*",
+		"wp-coding-standards/wpcs": "*"
+	}
+}
