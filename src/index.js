@@ -1,8 +1,11 @@
 /**
  * Load the block revisions plugin.
  */
+import BlockRevisions from './block-revisions';
+
 const { registerPlugin } = wp.plugins;
 const { __ } = wp.i18n;
+
 
 const {
 	PluginSidebar,
@@ -15,17 +18,17 @@ const BlockRevisionsSidebar = () => (
 	<Fragment>
 		<PluginSidebarMoreMenuItem
 			target="sidebar-name"
-			icon="smiley"
+			icon="backup"
 		>
-			{ __( 'Expanded Sidebar - More item', 'blockk-revisions' ); }
+			{ __( 'Version History', 'block-revisions' ) }
 		</PluginSidebarMoreMenuItem>
 		<PluginSidebar
 			name="sidebar-name"
-			icon="smiley"
-			title="My Sidebar" >
-			{ __( 'Content of the sidebar', 'blockk-revisions' ); }
+			icon="backup"
+			title={ __( 'Version History', 'block-revisions' ) } >
+			<BlockRevisions />
 		</PluginSidebar>
 	</Fragment>
 )
-
+console.log( 'registering plugin' );
 registerPlugin( 'plugin-sidebar-expanded-test', { render: BlockRevisionsSidebar } );

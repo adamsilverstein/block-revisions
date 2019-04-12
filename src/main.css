@@ -1,0 +1,97 @@
+.block-revisions-revision {
+	border-top: 1px solid silver;
+	padding-left: 25px;
+	padding-top: 12px;
+	padding-bottom: 12px;
+
+}
+.block-revisions-revision.active,
+.block-revisions-revision.active:hover {
+	background-color: rgb( 232, 240, 254 );
+}
+.block-revisions-revision p {
+	margin-bottom: 6px;
+}
+
+.block-revisions-revision:hover {
+	background-color: #eee;
+}
+
+.block-revision-date {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.block-revision-author {
+	font-size: 12px;
+	font-style: italic;
+}
+
+.block-revisions-diff-viewer {
+	position: fixed;
+	width: calc(100% - 440px);
+	height: 100%;
+	top: 100px;
+	left: 160px;
+	right: 260px;
+	bottom: 0;
+	background-color: #FFF;
+	z-index: 2;
+	cursor: pointer;
+}
+
+.block-revisions-viewer {
+	margin: 0;
+	padding: 0;
+}
+
+.block-revisions-viewer.status-new {
+	border: solid 1px limegreen;
+}
+
+.block-revisions-viewer.status-new:before {
+	content: 'Added';
+	background-color: limegreen;
+	color: white;
+	padding: 2px 4px;
+	font-size: 12px;
+	margin-top: 13px;
+	position: relative;
+	top: -24px;
+}
+
+.block-revisions-viewer.status-old {
+	border: solid 1px red;
+}
+
+.block-revisions-viewer.status-old:before {
+	content: 'Removed';
+	background-color: red;
+	color: white;
+	padding: 2px 4px;
+	font-size: 12px;
+	margin-top: 13px;
+	position: relative;
+	top: -24px;
+}
+
+
+.block-revisions-viewer.status-changed {
+	border: solid 1px lightskyblue;
+}
+
+.diff-unchanged {
+	background-color: ivory;
+}
+
+.diff-added {
+	background-color: palegreen;
+}
+.diff-removed {
+	background-color: #FFCCCC;
+	text-decoration: line-through;
+}
+
+.block-inner-diff {
+	display:inline-block;
+}

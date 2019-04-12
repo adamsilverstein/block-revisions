@@ -25,12 +25,24 @@ function setup() {
 add_action( 'block_revisions_loaded', __NAMESPACE__ . '\setup' );
 
 function admin_enqueue_scripts() {
-	error_log( BLOCK_REVISIONS_URL . 'dist/main.js' );
+
 	wp_enqueue_script(
 		'block-revisions',
 		BLOCK_REVISIONS_URL . 'dist/main.js',
-		array(),
+		array( 'wp-sanitize' ),
 		BLOCK_REVISIONS_VERSION,
 		true
 	);
+}
+
+/**
+ * Return the author information with revisions.
+ */
+add_filter( 'rest_prepare_revision',  __NAMESPACE__ . '\rest_prepare_revision' );
+
+function rest_prepare_revision( $response ) {
+	$author_id = $response->data['author'];
+	$user = get_user_by( 'id', $author_id );
+	$response->data['authorname'] = $user->data->display_name;
+	return $response;
 }

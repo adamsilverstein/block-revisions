@@ -1,0 +1,48 @@
+---
+language: php
+
+php:
+  - 7.3
+  - 7.1
+  - 7.0
+  - 5.6
+  - 5.5
+  - 5.4
+
+# This triggers builds to run on the new (faster) TravisCI infrastructure.
+# See: http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
+
+cache:
+  directories:
+    - "${HOME}/.composer/cache"
+    - "${HOME}/.npm/"
+env:
+  global:
+    - PATH="${HOME}/bin:${PATH}"
+
+matrix:
+  include:
+    - php: 7.2
+      env: SNIFF=1
+    - php: 5.3
+      # As 'trusty' is not supporting PHP 5.2/5.3 anymore, we need to force using 'precise'.
+      dist: precise
+
+  fast_finish: true
+
+before_install:
+  - npm set loglevel error
+  - npm set progress false
+
+install:
+  - npm install -g jsonlint
+
+script:
+  - find . -type f -name "*.json" -print0 | xargs -0 -n1 jsonlint -q
+  - find . -type f -name "*.php" -print0 | xargs -0 -n1 php -l
+  - composer validate
+  - travis_wait composer install --no-interaction --no-progress --no-scripts --no-suggest --optimize-autoloader --prefer-dist --verbose
+  - if [[ "$SNIFF" == "1" ]]; then composer install-codestandards; fi
+  - if [[ "$SNIFF" == "1" ]]; then ./vendor/bin/phpcs; fi
+  - ./vendor/bin/security-checker -n security:check --end-point=http://security.sensiolabs.org/check_lock
