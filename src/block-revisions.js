@@ -132,7 +132,14 @@ class BlockRevisions extends Component {
 			{
 				path: fetchPath,
 			}
-		).then( ( revisions ) => {
+		).then( ( returnedRevisions ) => {
+			const revisions = [];
+			let i = 0;
+			returnedRevisions.forEach( ( revision ) => {
+				if ( 0 > revision.slug.indexOf( 'autosave' ) ) {
+					revisions[ i++ ] = revision;
+				}
+			} );
 			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
 			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
 			const diff = this.getDiff( oldContent, newContent );
@@ -162,6 +169,18 @@ class BlockRevisions extends Component {
 		const allBlocks = [];
 		oldBlocks.forEach( block => allBlocks.push( block ) );
 		newBlocks.forEach( block => allBlocks.push( block ) );
+		let allBlockHashes = [];
+		allBlocks.forEach ( ( block ) => {
+			allBlockHashes[ hash( block.attributes ) ] = block;
+		} );
+		let newBlockHashes = [];
+		newBlocks.forEach ( ( block ) => {
+			newBlockHashes[ hash( block.attributes ) ] = block;
+		} );
+		let oldBlockHashes = [];
+		oldBlocks.forEach ( ( block ) => {
+			oldBlockHashes[ hash( block.attributes ) ] = block;
+		} );
 		const oldParsedContent = this.getHashMapFromBlocks( oldBlocks );
 		const newParsedContent = this.getHashMapFromBlocks( newBlocks );
 		const lineDiff = new LineDiff( oldParsedContent, newParsedContent, 0 );
@@ -216,15 +235,15 @@ class BlockRevisions extends Component {
 					} else {
 						if ( oldBlock && newBlock ) {
 							oldBlock.attributes.status = 'unchanged';
+							markedContent.push( block );
 						} else {
 							oldBlock.attributes.status = 'old changed';
 							block.attributes.status = 'new changed';
-
+							// For non text blocks, push the old and new blocks.
+							markedContent.push( block );
+							markedContent.push( oldBlock );
 						}
 
-						// For non text blocks, push the old and new blocks.
-						markedContent.push( oldBlock );
-						markedContent.push( block );
 					}
 				};
 
