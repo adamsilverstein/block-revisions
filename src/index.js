@@ -7,14 +7,18 @@ import uuid from 'uuid/v4';
 const { addFilter } = wp.hooks;
 const { registerPlugin } = wp.plugins;
 const { __ } = wp.i18n;
+const { Fragment }	= wp.element;
+const { InspectorAdvancedControls }	= wp.blockEditor;
+const { createHigherOrderComponent } = wp.compose;
+const { ToggleControl } = wp.components;
 
+import classnames from 'classnames';
 
 const {
 	PluginSidebar,
 	PluginSidebarMoreMenuItem
 } = wp.editPost;
 
-const { Fragment } = wp.element;
 
 const BlockRevisionsSidebar = () => (
 	<Fragment>
@@ -35,32 +39,40 @@ const BlockRevisionsSidebar = () => (
 console.log( 'registering plugin', uuid() );
 
 /**
- * Add custom attribute for mobile visibility.
- *
- * @param {Object} settings Settings for the block.
- *
- * @return {Object} settings Modified settings.
+ * Add custom attribute for uuid.
  */
-function addAttributes( settings ) {
-	if( typeof settings.attributes !== 'undefined' ){
-
-		settings.attributes = Object.assign( settings.attributes, {
-			uuid:{
-				type: 'string',
-				default: uuid(),
-			}
-		});
-
-	}
-	console.log( 'addAttributes', settings );
-
+function addUUIDBlockRevisionAttributes( settings ) {
+	settings.attributes = Object.assign( settings.attributes, {
+		uuid:{
+			type: 'string',
+			default: false,
+		}
+	});
 	return settings;
 }
 
 addFilter(
 	'blocks.registerBlockType',
-	'editorskit/custom-attributes',
-	addAttributes
+	'plugins/block-revisions-bt',
+	addUUIDBlockRevisionAttributes
 );
 
-//registerPlugin( 'plugin-sidebar-expanded-test', { render: BlockRevisionsSidebar } );
+/**
+ * Generate the uuid on a per block basis if missing.
+ */
+function addUUIDToBlockIfMissing( extraProps, blockType, attributes ) {
+
+	const { uuid: u } = attributes;
+	if ( ! u ) {
+		attributes.uuid = uuid();
+	}
+	return extraProps;
+}
+
+addFilter(
+	'blocks.getSaveContent.extraProps',
+	'plugins/block-revisions-wp',
+	addUUIDToBlockIfMissing
+);
+
+registerPlugin( 'plugin-sidebar-expanded-test', { render: BlockRevisionsSidebar } );
