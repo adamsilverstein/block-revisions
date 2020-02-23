@@ -1,10 +1,10 @@
-import apiFetch from '@wordpress/api-fetch';
 import dateFormat from 'dateformat';
 import hash from 'object-hash';
 import LineDiff from 'line-diff';
 const jsdiff = require( 'diff' );
 
 import './main.css';
+const { apiFetch } = wp;
 
 const {
 	Component,
