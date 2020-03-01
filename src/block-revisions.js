@@ -87,7 +87,6 @@ class BlockRevisions extends Component {
 		const { revisions } = this.state;
 		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
 		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
-		console.log( 'handleRevisionClick' );
 		const diff = getDiff( oldContent, newContent );
 
 		wp.data.dispatch( 'core/block-editor' ).resetBlocks( diff );

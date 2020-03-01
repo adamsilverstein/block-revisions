@@ -34,11 +34,10 @@ const getDiff = ( oldContent, newContent ) => {
     } );
     const oldParsedContent = getUUIDMapFromBlocks( oldBlocks );
     const newParsedContent = getUUIDMapFromBlocks( newBlocks );
-    const lineDiff = new LineDiff( oldParsedContent, newParsedContent, 0 );
-    console.log( oldParsedContent, newParsedContent, lineDiff );
-    const changes  = lineDiff.changes ? lineDiff.changes : [];
-    const newLines = lineDiff.new_lines ? lineDiff.new_lines : [];
-    const oldLines = lineDiff.old_lines ? lineDiff.old_lines : [];
+    const lineDiff         = new LineDiff( oldParsedContent, newParsedContent, 0 );
+    const changes          = lineDiff.changes ? lineDiff.changes : [];
+    const newLines         = lineDiff.new_lines ? lineDiff.new_lines : [];
+    const oldLines         = lineDiff.old_lines ? lineDiff.old_lines : [];
 
     // Build a changeMap keyed by the after UUID.
     const changeMap  = [];
@@ -49,7 +48,6 @@ const getDiff = ( oldContent, newContent ) => {
             changeMap[ key ] = value;
         }
     } );
-    console.log( 'changeMap', changeMap );
 
     // Create the new block map by matching/marking old and new.
     let markedContent = [];
@@ -59,35 +57,68 @@ const getDiff = ( oldContent, newContent ) => {
 
         if ( changeMap[ blockUUID ] ) {
 
-            const newBlock = findBlockByUUID( blockUUID, allBlocks );
-            const oldBlock = findBlockByUUID( changeMap[ blockUUID ], allBlocks );
+            const newBlock = findBlockByUUID( blockUUID, newBlocks );
+            const oldBlock = findBlockByUUID( changeMap[ blockUUID ], oldBlocks );
             block.attributes.status = 'new';
 
             // This block was changed, show removed/added blocks.
             if ( oldBlock ) {
 
+                // Is the old block no longer present?
                 if ( ! newBlockUUIDs.includes( oldBlock.attributes.uuid ) ) {
 
+                    // Is the old and new block the same?
                     if ( oldBlock.attributes.uuid !== block.attributes.uuid ) {
-                        block.attributes.status = '';
+
+                        // Show the current block as unchanged, and the previous block as deleted.
+                        if ( findBlockByUUID( block.attributes.uuid, oldBlocks ) ) {
+                            block.attributes.status = 'unchanged';
+                        } else {
+                            block.attributes.status = 'new';
+                        }
                         oldBlock.attributes.status = 'old';
                         markedContent.push( oldBlock );
                         markedContent.push( block );
 
-                        console.log( 'ADD ONE: %s, %s', oldBlock.attributes.uuid, block.attributes.uuid );
                     } else {
-                        block.attributes.status = 'unchanged';
-                        //oldBlock.attributes.status = 'old';
-                        //markedContent.push( oldBlock );
+                        block.attributes.status = 'changed';
+                        // If block blocks are text, show a diff.
+                        if (
+                            'core/paragraph' === oldBlock.name &&
+                            'core/paragraph' === block.name &&
+                            oldBlock.attributes.content !== block.attributes.content
+                        ) {
+                            const diff = jsdiff.diffChars( stripTags( oldBlock.originalContent ).trim(), stripTags( block.originalContent ).trim() );
+                            let diffContent = '';
+                            // Build the visual diff.
+                            diff.forEach( ( part ) => {
+                                const color = part.added ? 'added' : part.removed ? 'removed' : 'unchanged';
+                                diffContent += `<div class="block-inner-diff diff-${ color }">` + part.value + '</div>';
+                                });
+                            diffContent = `<div>${ diffContent }</div>`
+                            block.content = diffContent;
+                            block.attributes.content = diffContent;
+                        } else {
+
+                            if (
+                                oldBlock.attributes.content !== block.attributes.content ||
+                                oldBlock.attributes.caption !== block.attributes.caption
+                            ) {
+                                // Show before and after (old block removed, new block added).
+                                block.attributes.status = 'new';
+                                oldBlock.attributes.status = 'old';
+                                markedContent.push( oldBlock );
+                            }
+                        }
                         markedContent.push( block );
-                        console.log( 'ADD ONEb: %s', block.attributes.uuid );
                     }
                 } else {
 
                     // If block blocks are text, show a diff.
                     if (
                         oldBlock &&
-                        newBlock &&'core/paragraph' === oldBlock.name &&
+                        newBlock &&
+                        'core/paragraph' === oldBlock.name &&
                         'core/paragraph' === newBlock.name
                     ) {
                         const diff = jsdiff.diffChars( stripTags( oldBlock.originalContent ).trim(), stripTags( newBlock.originalContent ).trim() );
@@ -102,13 +133,11 @@ const getDiff = ( oldContent, newContent ) => {
                         block.attributes.content = diffContent;
                         block.attributes.status = 'changed';
                         markedContent.push( block );
-                        console.log( 'ADD TWO: %s', block.attributes.uuid );
 
                     } else {
                         if ( oldBlock && newBlock ) {
                             oldBlock.attributes.status = 'unchanged';
                             markedContent.push( block );
-                            console.log( 'ADD THREE: %s', block.attributes.uuid );
 
                         } else {
                             oldBlock.attributes.status = 'old changed';
@@ -117,7 +146,6 @@ const getDiff = ( oldContent, newContent ) => {
                             markedContent.push( block );
                             markedContent.push( oldBlock );
 
-                            console.log( 'ADD FOUR: %s, %s', oldBlock.attributes.uuid, block.attributes.uuid );
 
                         }
 
@@ -137,9 +165,6 @@ const getDiff = ( oldContent, newContent ) => {
             }
 
             markedContent.push( block );
-            console.log( 'ADD FIVE: %s', block.attributes.uuid );
-
-
         }
     } );
     return markedContent;
