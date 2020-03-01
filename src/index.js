@@ -2,9 +2,12 @@
  * Load the block revisions plugin.
  */
 import BlockRevisions from './block-revisions';
+import { v4 as uuid } from 'uuid';
 
+const { addFilter } = wp.hooks;
 const { registerPlugin } = wp.plugins;
 const { __ } = wp.i18n;
+const { Fragment }	= wp.element;
 
 
 const {
@@ -12,7 +15,6 @@ const {
 	PluginSidebarMoreMenuItem
 } = wp.editPost;
 
-const { Fragment } = wp.element;
 
 const BlockRevisionsSidebar = () => (
 	<Fragment>
@@ -30,5 +32,43 @@ const BlockRevisionsSidebar = () => (
 		</PluginSidebar>
 	</Fragment>
 )
-console.log( 'registering plugin' );
+console.log( 'registering plugin', uuid() );
+
+/**
+ * Add custom attribute for uuid.
+ */
+function addUUIDBlockRevisionAttributes( settings ) {
+	settings.attributes = Object.assign( settings.attributes, {
+		uuid:{
+			type: 'string',
+			default: false,
+		}
+	});
+	return settings;
+}
+
+addFilter(
+	'blocks.registerBlockType',
+	'plugins/block-revisions-bt',
+	addUUIDBlockRevisionAttributes
+);
+
+/**
+ * Generate the uuid on a per block basis if missing.
+ */
+function addUUIDToBlockIfMissing( extraProps, blockType, attributes ) {
+
+	const { uuid: u } = attributes;
+	if ( ! u ) {
+		attributes.uuid = uuid();
+	}
+	return extraProps;
+}
+
+addFilter(
+	'blocks.getSaveContent.extraProps',
+	'plugins/block-revisions-wp',
+	addUUIDToBlockIfMissing
+);
+
 registerPlugin( 'plugin-sidebar-expanded-test', { render: BlockRevisionsSidebar } );
