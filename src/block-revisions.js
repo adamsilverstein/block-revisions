@@ -1,7 +1,5 @@
 import dateFormat from 'dateformat';
-import hash from 'object-hash';
-import LineDiff from 'line-diff';
-const jsdiff = require( 'diff' );
+import getDiff from './get-diff';
 
 import './main.css';
 const { apiFetch } = wp;
@@ -15,10 +13,6 @@ const {
 	addFilter,
 	removeFilter,
 } = wp.hooks;
-
-const {
-	stripTags
-} = wp.sanitize;
 
 
 class BlockRevisions extends Component {
@@ -38,6 +32,7 @@ class BlockRevisions extends Component {
 
 	componentDidMount() {
 		wp.data.dispatch( 'core/editor' ).lockPostSaving( 'block-revisions' );
+		wp.data.dispatch( 'core/editor' ).lockPostAutosaving( 'block-revisions' );
 
 		this.getRevisions();
 		this.setupBlockFilters();
@@ -48,14 +43,15 @@ class BlockRevisions extends Component {
 		this.removeBlockFilters();
 		this.restorePost();
 		wp.data.dispatch( 'core/editor' ).unlockPostSaving( 'block-revisions' );
+		wp.data.dispatch( 'core/editor' ).unlockPostAutosaving( 'block-revisions' );
 	}
 
 	storePost() {
-		this.postBlocks = wp.data.select( 'core/editor' ).getBlocks();
+		this.postBlocks = wp.data.select( 'core/block-editor' ).getBlocks();
 	}
 
 	restorePost() {
-		wp.data.dispatch( 'core/editor' ).resetBlocks( this.postBlocks );
+		wp.data.dispatch( 'core/block-editor' ).resetBlocks( this.postBlocks );
 	}
 
 
@@ -91,25 +87,13 @@ class BlockRevisions extends Component {
 		const { revisions } = this.state;
 		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
 		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
-		const diff = this.getDiff( oldContent, newContent );
+		console.log( 'handleRevisionClick' );
+		const diff = getDiff( oldContent, newContent );
 
-		wp.data.dispatch( 'core/editor' ).resetBlocks( diff );
+		wp.data.dispatch( 'core/block-editor' ).resetBlocks( diff );
 
 		this.setState( {
 			activeRevisionIndex: i,
-		} );
-	}
-
-	/**
-	 * Generate a hashmap from an array of blocks.
-	 *
-	 * @param {array} blocks An array of blocks.
-	 *
-	 * @return array An array of block hashes.
-	 */
-	getHashMapFromBlocks( blocks ) {
-		return blocks.map( ( block ) => {
-			return hash( block.attributes );
 		} );
 	}
 
@@ -142,8 +126,8 @@ class BlockRevisions extends Component {
 			} );
 			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
 			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
-			const diff = this.getDiff( oldContent, newContent );
-			wp.data.dispatch( 'core/editor' ).resetBlocks( diff );
+			const diff = getDiff( oldContent, newContent );
+			wp.data.dispatch( 'core/block-editor' ).resetBlocks( diff );
 			this.setState( {
 				revisions,
 			} );
@@ -153,131 +137,6 @@ class BlockRevisions extends Component {
 				} );
 			} );
 
-	}
-
-	/**
-	 * Compare two arrays of blocks, returning a diff object.
-	 *
-	 * @param {string} oldContent The old content.
-	 * @param {string} newContent The new content.
-	 *
-	 * @return {LineDiff} The diff object.
-	 */
-	getDiff( oldContent, newContent ){
-		const oldBlocks = wp.blocks.parse( oldContent );
-		const newBlocks = wp.blocks.parse( newContent );
-		const allBlocks = [];
-		oldBlocks.forEach( block => allBlocks.push( block ) );
-		newBlocks.forEach( block => allBlocks.push( block ) );
-		let allBlockHashes = [];
-		allBlocks.forEach ( ( block ) => {
-			allBlockHashes[ hash( block.attributes ) ] = block;
-		} );
-		let newBlockHashes = [];
-		newBlocks.forEach ( ( block ) => {
-			newBlockHashes[ hash( block.attributes ) ] = block;
-		} );
-		let oldBlockHashes = [];
-		oldBlocks.forEach ( ( block ) => {
-			oldBlockHashes[ hash( block.attributes ) ] = block;
-		} );
-		const oldParsedContent = this.getHashMapFromBlocks( oldBlocks );
-		const newParsedContent = this.getHashMapFromBlocks( newBlocks );
-		const lineDiff = new LineDiff( oldParsedContent, newParsedContent, 0 );
-		const changes  = lineDiff.changes ? lineDiff.changes : [];
-		const newLines = lineDiff.new_lines ? lineDiff.new_lines : [];
-		const oldLines = lineDiff.old_lines ? lineDiff.old_lines : [];
-
-		// Build a changeMap keyed by the after hash.
-		const changeMap  = [];
-		changes.forEach( ( change ) => {
-
-			const key   = change[ '_' ][1];
-			const value = change[ '_' ][0];
-			if ( 0 < value.length ) {
-				changeMap[ key ] = value;
-			}
-		} );
-
-		// Create the new block map by matching/marking old and new.
-		let markedContent = [];
-		newBlocks.forEach( ( block ) => {
-			const blockHash = hash( block.attributes );
-
-
-			if ( changeMap[ blockHash ] ) {
-
-				const newBlock = this.findBlockByHash( blockHash, allBlocks );
-				const oldBlock = this.findBlockByHash( changeMap[ blockHash ], allBlocks );
-				block.attributes.status = 'new';
-
-				// This block was changed, show removed/added blocks.
-				if ( oldBlock ) {
-
-					// If block blocks are text, show a diff.
-					if (
-						oldBlock &&
-						newBlock &&'core/paragraph' === oldBlock.name &&
-						'core/paragraph' === newBlock.name
-					) {
-						const diff = jsdiff.diffChars( stripTags( oldBlock.originalContent ).trim(), stripTags( newBlock.originalContent ).trim() );
-						let diffContent = '';
-						// Build the visual diff.
-						diff.forEach( ( part ) => {
-							const color = part.added ? 'added' : part.removed ? 'removed' : 'unchanged';
-							diffContent += `<div class="block-inner-diff diff-${ color }">` + part.value + '</div>';
-						  });
-						diffContent = `<div>${ diffContent }</div>`
-						block.content = diffContent;
-						block.attributes.content = diffContent;
-						block.attributes.status = 'changed';
-						markedContent.push( block );
-					} else {
-						if ( oldBlock && newBlock ) {
-							oldBlock.attributes.status = 'unchanged';
-							markedContent.push( block );
-						} else {
-							oldBlock.attributes.status = 'old changed';
-							block.attributes.status = 'new changed';
-							// For non text blocks, push the old and new blocks.
-							markedContent.push( block );
-							markedContent.push( oldBlock );
-						}
-
-					}
-				};
-
-
-			} else {
-
-				if ( newLines.includes( blockHash ) ) {
-					block.attributes.status = 'new';
-				} else if ( oldLines.includes( blockHash ) ) {
-					block.attributes.status = 'old';
-				} else {
-					block.attributes.status = 'unchanged';
-				}
-
-				markedContent.push( block );
-			}
-		} );
-		return markedContent;
-	}
-
-	/**
-	 * Search an array of blocks for the block with the matching attribute hash.
-	 *
-	 * @param {string} blockHash The hash to search for.
-	 * @param {array}  blocks    The array of blocks to search.
-	 */
-	findBlockByHash( blockHash, blocks ) {
-		let found = false
-		blocks.forEach( ( block ) => {
-			if ( hash( block.attributes ) === blockHash ) {
-				found = block;
-			}
-		} );
-		return found;
 	}
 
 	render() {

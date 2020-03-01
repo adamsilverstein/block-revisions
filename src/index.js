@@ -2,17 +2,13 @@
  * Load the block revisions plugin.
  */
 import BlockRevisions from './block-revisions';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 
 const { addFilter } = wp.hooks;
 const { registerPlugin } = wp.plugins;
 const { __ } = wp.i18n;
 const { Fragment }	= wp.element;
-const { InspectorAdvancedControls }	= wp.blockEditor;
-const { createHigherOrderComponent } = wp.compose;
-const { ToggleControl } = wp.components;
 
-import classnames from 'classnames';
 
 const {
 	PluginSidebar,
