@@ -63,6 +63,15 @@
 	padding: 10px 25px;
 	border-bottom: 1px solid #ddd;
 	background-color: #f9f9f9;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.keyboard-shortcuts {
+	font-size: 10px;
+	color: #666;
+	font-style: italic;
 }
 
 .block-revisions-view-toggle {

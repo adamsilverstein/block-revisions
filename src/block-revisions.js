@@ -29,6 +29,9 @@ class BlockRevisions extends Component {
 			selectedBlockUUID: null, // for block-level focus
 		};
 
+		// Cache for diff calculations to improve performance
+		this.diffCache = new Map();
+
 		this.handleRevisionClick = this.handleRevisionClick.bind( this );
 		this.handleViewModeToggle = this.handleViewModeToggle.bind( this );
 		this.handleBlockFocus = this.handleBlockFocus.bind( this );
@@ -41,11 +44,13 @@ class BlockRevisions extends Component {
 		this.getRevisions();
 		this.setupBlockFilters();
 		this.storePost();
+		this.setupKeyboardNavigation();
 	}
 
 	componentWillUnmount() {
 		this.removeBlockFilters();
 		this.restorePost();
+		this.removeKeyboardNavigation();
 		wp.data.dispatch( 'core/editor' ).unlockPostSaving( 'block-revisions' );
 		wp.data.dispatch( 'core/editor' ).unlockPostAutosaving( 'block-revisions' );
 	}
@@ -94,10 +99,7 @@ class BlockRevisions extends Component {
 	}
 
 	handleRevisionClick( i ) {
-		const { revisions } = this.state;
-		const oldContent = revisions[ i + 1 ] && revisions[ i + 1 ].content ? revisions[ i + 1 ].content.raw : '';
-		const newContent = revisions[ i ] && revisions[ i ].content ? revisions[ i ].content.raw : '';
-		const diff = getDiff( oldContent, newContent );
+		const diff = this.getDiffCached( i );
 
 		// Only update editor if in inline mode
 		if ( this.state.viewMode === 'inline' ) {
@@ -132,6 +134,59 @@ class BlockRevisions extends Component {
 	}
 
 	/**
+	 * Set up keyboard navigation
+	 */
+	setupKeyboardNavigation() {
+		this.keyboardHandler = ( event ) => {
+			// Only handle if the sidebar is active and we have revisions
+			if ( ! this.state.revisions || this.state.revisions.length === 0 ) {
+				return;
+			}
+
+			const { activeRevisionIndex, revisions } = this.state;
+			
+			switch ( event.key ) {
+				case 'ArrowUp':
+					if ( event.ctrlKey || event.metaKey ) {
+						event.preventDefault();
+						const prevIndex = Math.max( 0, activeRevisionIndex - 1 );
+						if ( prevIndex !== activeRevisionIndex ) {
+							this.handleRevisionClick( prevIndex );
+						}
+					}
+					break;
+				case 'ArrowDown':
+					if ( event.ctrlKey || event.metaKey ) {
+						event.preventDefault();
+						const nextIndex = Math.min( revisions.length - 1, activeRevisionIndex + 1 );
+						if ( nextIndex !== activeRevisionIndex ) {
+							this.handleRevisionClick( nextIndex );
+						}
+					}
+					break;
+				case 'v':
+					if ( event.ctrlKey || event.metaKey ) {
+						event.preventDefault();
+						this.handleViewModeToggle();
+					}
+					break;
+			}
+		};
+		
+		document.addEventListener( 'keydown', this.keyboardHandler );
+	}
+
+	/**
+	 * Remove keyboard navigation
+	 */
+	removeKeyboardNavigation() {
+		if ( this.keyboardHandler ) {
+			document.removeEventListener( 'keydown', this.keyboardHandler );
+			this.keyboardHandler = null;
+		}
+	}
+
+	/**
 	 * Get the revisions for the post.
 	 */
 	async getRevisions() {
@@ -161,9 +216,14 @@ class BlockRevisions extends Component {
 			const oldContent = revisions[1] && revisions[1].content ? revisions[1].content.raw : '';
 			const newContent = revisions[ 0 ] && revisions[0].content ? revisions[0].content.raw : '';
 			const diff = getDiff( oldContent, newContent );
+			
+			// Cache the initial diff
+			this.diffCache.set( 'diff-0', diff );
+			
 			wp.data.dispatch( 'core/block-editor' ).resetBlocks( diff );
 			this.setState( {
 				revisions,
+				diff: diff,
 			} );
 		} ).catch( ( error ) => {
 				this.setState( {
@@ -182,6 +242,11 @@ class BlockRevisions extends Component {
 			return null; // No previous revision to compare
 		}
 
+		const cacheKey = `count-${revisionIndex}`;
+		if ( this.diffCache.has( cacheKey ) ) {
+			return this.diffCache.get( cacheKey );
+		}
+
 		const oldContent = revisions[ revisionIndex + 1 ] && revisions[ revisionIndex + 1 ].content ? revisions[ revisionIndex + 1 ].content.raw : '';
 		const newContent = revisions[ revisionIndex ] && revisions[ revisionIndex ].content ? revisions[ revisionIndex ].content.raw : '';
 		const diff = getDiff( oldContent, newContent );
@@ -193,7 +258,28 @@ class BlockRevisions extends Component {
 			else if ( block.attributes.status === 'changed' ) modified++;
 		} );
 
-		return { added, removed, modified };
+		const result = { added, removed, modified };
+		this.diffCache.set( cacheKey, result );
+		return result;
+	}
+
+	/**
+	 * Get or calculate diff with caching
+	 */
+	getDiffCached( revisionIndex ) {
+		const { revisions } = this.state;
+		const cacheKey = `diff-${revisionIndex}`;
+		
+		if ( this.diffCache.has( cacheKey ) ) {
+			return this.diffCache.get( cacheKey );
+		}
+
+		const oldContent = revisions[ revisionIndex + 1 ] && revisions[ revisionIndex + 1 ].content ? revisions[ revisionIndex + 1 ].content.raw : '';
+		const newContent = revisions[ revisionIndex ] && revisions[ revisionIndex ].content ? revisions[ revisionIndex ].content.raw : '';
+		const diff = getDiff( oldContent, newContent );
+
+		this.diffCache.set( cacheKey, diff );
+		return diff;
 	}
 
 	/**
@@ -322,10 +408,15 @@ class BlockRevisions extends Component {
 					<button
 						className={ `block-revisions-view-toggle ${ viewMode }` }
 						onClick={ this.handleViewModeToggle }
-						title={ viewMode === 'inline' ? 'Switch to side-by-side view' : 'Switch to inline view' }
+						title={ viewMode === 'inline' ? 'Switch to side-by-side view (Ctrl+V)' : 'Switch to inline view (Ctrl+V)' }
 					>
 						{ viewMode === 'inline' ? '⚏' : '☰' } { viewMode === 'inline' ? 'Side-by-Side' : 'Inline' }
 					</button>
+					<div className="keyboard-shortcuts">
+						<small>
+							⌨️ Ctrl+↑/↓: Navigate revisions | Ctrl+V: Toggle view
+						</small>
+					</div>
 				</div>
 
 				<div className="block-revisions-list">
