@@ -1,3 +1,5 @@
+/* Block Revisions Styles */
+
 .block-revisions-revision {
 	border-top: 1px solid silver;
 	padding-left: 25px;
@@ -61,6 +63,15 @@
 	padding: 10px 25px;
 	border-bottom: 1px solid #ddd;
 	background-color: #f9f9f9;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.keyboard-shortcuts {
+	font-size: 10px;
+	color: #666;
+	font-style: italic;
 }
 
 .block-revisions-view-toggle {
@@ -255,7 +266,6 @@
 	top: -24px;
 }
 
-
 .block-revisions-viewer.status-changed {
 	border: solid 1px lightskyblue;
 }
@@ -267,11 +277,24 @@
 .diff-added {
 	background-color: palegreen;
 }
+
 .diff-removed {
 	background-color: #FFCCCC;
 	text-decoration: line-through;
 }
 
 .block-inner-diff {
-	display:inline-block;
+	display: inline-block;
+}
+
+.block-revisions-loading {
+	padding: 25px;
+	text-align: center;
+	font-style: italic;
+	color: #666;
+}
+
+.block-revisions-list {
+	max-height: 300px;
+	overflow-y: auto;
 }
