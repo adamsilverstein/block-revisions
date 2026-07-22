@@ -13,12 +13,12 @@
     "extends @wordpress/browserslist-config"
   ],
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-react": "^7.12.10",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-react": "^8.0.1",
     "@wordpress/api-fetch": "^3.21.1",
     "@wordpress/browserslist-config": "^2.7.0",
-    "babel-loader": "^8.2.2",
+    "babel-loader": "^10.1.1",
     "css-loader": "^5.0.1",
     "dateformat": "^4.4.1",
     "diff": "^5.0.0",
