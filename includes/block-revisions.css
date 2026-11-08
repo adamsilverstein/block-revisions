@@ -1,0 +1,300 @@
+/* Block Revisions Styles */
+
+.block-revisions-revision {
+	border-top: 1px solid silver;
+	padding-left: 25px;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	cursor: pointer;
+}
+
+.block-revisions-revision.active,
+.block-revisions-revision.active:hover {
+	background-color: rgb( 232, 240, 254 );
+}
+
+.block-revisions-revision p {
+	margin-bottom: 6px;
+}
+
+.block-revisions-revision:hover {
+	background-color: #eee;
+}
+
+.block-revision-date {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.block-revision-author {
+	font-size: 12px;
+	font-style: italic;
+}
+
+.block-revision-changes {
+	font-size: 11px;
+	margin-top: 4px;
+}
+
+.change-count {
+	padding: 1px 4px;
+	border-radius: 2px;
+	margin-right: 4px;
+	font-weight: bold;
+}
+
+.change-count.added {
+	background-color: #d4e8d4;
+	color: #0d5016;
+}
+
+.change-count.removed {
+	background-color: #ffd6d6;
+	color: #8b0000;
+}
+
+.change-count.modified {
+	background-color: #e6f3ff;
+	color: #0066cc;
+}
+
+/* Controls */
+.block-revisions-controls {
+	padding: 10px 25px;
+	border-bottom: 1px solid #ddd;
+	background-color: #f9f9f9;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.keyboard-shortcuts {
+	font-size: 10px;
+	color: #666;
+	font-style: italic;
+}
+
+.block-revisions-view-toggle {
+	background: #2271b1;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 12px;
+}
+
+.block-revisions-view-toggle:hover {
+	background: #135e96;
+}
+
+/* Side-by-side view */
+.block-revisions-sidebyside-view {
+	margin-top: 15px;
+	border: 1px solid #ddd;
+	background: white;
+}
+
+.sidebyside-header {
+	display: flex;
+	background: #f0f0f0;
+	border-bottom: 1px solid #ddd;
+}
+
+.sidebyside-column {
+	flex: 1;
+	padding: 8px 12px;
+	text-align: center;
+}
+
+.sidebyside-column h4 {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.sidebyside-content {
+	max-height: 400px;
+	overflow-y: auto;
+}
+
+.sidebyside-blocks .block-pair {
+	display: flex;
+	border-bottom: 1px solid #eee;
+}
+
+.sidebyside-blocks .sidebyside-column {
+	border-right: 1px solid #eee;
+	padding: 10px;
+}
+
+.sidebyside-blocks .sidebyside-column:last-child {
+	border-right: none;
+}
+
+.comparison-block {
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	margin-bottom: 5px;
+	cursor: pointer;
+	min-height: 40px;
+}
+
+.comparison-block:hover {
+	border-color: #2271b1;
+}
+
+.comparison-block.selected {
+	border-color: #2271b1;
+	background-color: #f0f6ff;
+}
+
+.comparison-block .block-type {
+	font-size: 10px;
+	color: #666;
+	margin-bottom: 4px;
+	font-weight: 500;
+}
+
+.comparison-block .block-content {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.comparison-block.old {
+	background-color: #fff5f5;
+}
+
+.comparison-block.new {
+	background-color: #f0fff0;
+}
+
+/* Block focus features */
+.block-focus-panel {
+	margin-top: 15px;
+	padding: 12px;
+	background: #f0f6ff;
+	border: 1px solid #2271b1;
+	border-radius: 3px;
+}
+
+.block-focus-panel h4 {
+	margin-top: 0;
+	margin-bottom: 8px;
+	font-size: 13px;
+	color: #2271b1;
+}
+
+.block-restore-button,
+.block-focus-restore {
+	background: #00a32a;
+	color: white;
+	border: none;
+	padding: 4px 8px;
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 11px;
+}
+
+.block-restore-button:hover,
+.block-focus-restore:hover {
+	background: #008a20;
+}
+
+.block-focus-indicator {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	background: white;
+	border: 1px solid #2271b1;
+	border-radius: 3px;
+	padding: 2px;
+}
+
+.block-revisions-viewer.block-focused {
+	position: relative;
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
+.block-revisions-diff-viewer {
+	position: fixed;
+	width: calc(100% - 440px);
+	height: 100%;
+	top: 100px;
+	left: 160px;
+	right: 260px;
+	bottom: 0;
+	background-color: #FFF;
+	z-index: 2;
+	cursor: pointer;
+}
+
+.block-revisions-viewer {
+	margin: 0;
+	padding: 0;
+}
+
+.block-revisions-viewer.status-new {
+	border: solid 1px limegreen;
+}
+
+.block-revisions-viewer.status-new:before {
+	content: 'Added';
+	background-color: limegreen;
+	color: white;
+	padding: 2px 4px;
+	font-size: 12px;
+	margin-top: 13px;
+	position: relative;
+	top: -24px;
+}
+
+.block-revisions-viewer.status-old {
+	border: solid 1px red;
+}
+
+.block-revisions-viewer.status-old:before {
+	content: 'Removed';
+	background-color: red;
+	color: white;
+	padding: 2px 4px;
+	font-size: 12px;
+	margin-top: 13px;
+	position: relative;
+	top: -24px;
+}
+
+.block-revisions-viewer.status-changed {
+	border: solid 1px lightskyblue;
+}
+
+.diff-unchanged {
+	background-color: ivory;
+}
+
+.diff-added {
+	background-color: palegreen;
+}
+
+.diff-removed {
+	background-color: #FFCCCC;
+	text-decoration: line-through;
+}
+
+.block-inner-diff {
+	display: inline-block;
+}
+
+.block-revisions-loading {
+	padding: 25px;
+	text-align: center;
+	font-style: italic;
+	color: #666;
+}
+
+.block-revisions-list {
+	max-height: 300px;
+	overflow-y: auto;
+}

@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Block Revisions
- * Description: Block based revisions.
- * Version:     1.0.1
+ * Description: Block based revisions with enhanced visual comparison and Gutenberg roadmap alignment.
+ * Version:     2.0.0
  * Author:      adamsilverstein
  * Author URI:  https://github.com/adamsilverstein
  * License:     GPLv2 or later
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-define( 'BLOCK_REVISIONS_VERSION', '1.0.1' );
+define( 'BLOCK_REVISIONS_VERSION', '2.0.0' );
 define( 'BLOCK_REVISIONS_URL', plugin_dir_url( __FILE__ ) );
 define( 'BLOCK_REVISIONS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'BLOCK_REVISIONS_INC', BLOCK_REVISIONS_PATH . 'includes/' );

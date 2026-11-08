@@ -33,6 +33,13 @@ function admin_enqueue_scripts() {
 		BLOCK_REVISIONS_VERSION,
 		true
 	);
+
+	wp_enqueue_style(
+		'block-revisions',
+		BLOCK_REVISIONS_URL . 'includes/block-revisions.css',
+		array(),
+		BLOCK_REVISIONS_VERSION
+	);
 }
 
 /**
